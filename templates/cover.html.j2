@@ -1,0 +1,106 @@
+<section class="section cover" style="page: cover;">
+  <!-- обложка всегда с новой страницы -->
+  <div class="pb"></div>
+
+  <style>
+    /* Обложка занимает весь лист A4, поля для этой страницы = 0 (@page cover задаётся в base.html.j2) */
+    .cover-page {
+      position: relative;
+      width: 210mm;     /* ширина A4 */
+      height: 297mm;    /* высота A4 */
+      overflow: hidden;
+      display: grid;
+      place-items: {{ place_items }} center; /* top|center|bottom → start|center|end */
+      text-align: center;
+    }
+
+    .cover-inner {
+      position: relative; z-index: 2;
+      display: grid; justify-items: center;
+      gap: {{ gap_mm }}mm;
+      padding: 10mm; /* внутренние поля, чтобы контент не прилипал к краю */
+    }
+
+    /* Фон как IMG с object-fit: cover — надёжно для WeasyPrint/Chromium */
+    .cover-bg-img {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      z-index: 0;
+      display: block;
+    }
+
+    .cover-overlay {
+      position: absolute; inset: 0;
+      background: rgba(0,0,0, {{ overlay_opacity | default(0.92) }});
+      z-index: 1;
+    }
+
+    .cover-logo {
+      max-width: {{ logo_max_w_mm }}mm;
+      max-height: {{ logo_max_h_mm }}mm;
+      display: block;
+      filter: drop-shadow(0 1mm 2mm rgba(0,0,0,.25));
+    }
+    .cover-logo img { width: 100%; height: 100%; object-fit: contain; display: block; }
+    .cover-logo svg { width: 100%; height: 100%; display: block; }
+
+    /* Год в правом верхнем углу (внутри обложки, НЕ fixed) */
+    .year-badge {
+      position: absolute; top: 8mm; right: 8mm; z-index: 3;
+    }
+    .cover-year {
+      font-size: {{ title_size_pt }}pt;
+      line-height: 1.05;
+      margin: 0;
+      color: {{ title_color }};
+      text-shadow: {{ title_shadow }};
+    }
+
+    .cover-subtitle {
+      font-size: {{ subtitle_size_pt }}pt;
+      line-height: 1.2;
+      margin: 0;
+      color: {{ subtitle_color }};
+    }
+
+    /* Диагностика (если файл не найден) */
+    .ph {
+      outline: 0.5mm dashed rgba(255,255,255,.7);
+      color: #fff; background: rgba(0,0,0,.3);
+      padding: 3mm; border-radius: 2mm; font-size: 10pt;
+    }
+  </style>
+
+  <div class="cover-page">
+    {% if bg and bg_exists %}
+      <img class="cover-bg-img" src="{{ bg }}" alt="">
+    {% elif bg %}
+      <div class="ph" style="position:absolute; inset:0; display:grid; place-items:center; z-index:0;">
+        Фон не найден: {{ bg }}<br><small>{{ bg_abs }}</small>
+      </div>
+    {% else %}
+      <div style="position:absolute; inset:0; background: var(--brand); z-index:0;"></div>
+    {% endif %}
+
+    <div class="cover-overlay"></div>
+
+    {% if year %}
+      <div class="year-badge"><h2 class="cover-year">{{ year }}</h2></div>
+    {% endif %}
+
+    <div class="cover-inner">
+      {% if logo_svg_inline %}
+        <div class="cover-logo" aria-label="logo">{% autoescape false %}{{ logo_svg_inline }}{% endautoescape %}</div>
+      {% elif logo and logo_exists %}
+        <div class="cover-logo"><img src="{{ logo }}" alt="logo"></div>
+      {% elif logo %}
+        <div class="ph">Логотип не найден: {{ logo }}<br><small>{{ logo_abs }}</small></div>
+      {% endif %}
+
+      {% if subtitle %}
+        <h2 class="cover-subtitle">{{ subtitle }}</h2>
+      {% endif %}
+    </div>
+  </div>
+</section>

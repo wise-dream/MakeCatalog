@@ -1,0 +1,74 @@
+<section class="section backcover" style="page: backcover;">
+  <div class="pb"></div>
+
+  <style>
+    @page backcover { size: A4; margin: 0; }
+
+    .backcover {
+      position: relative;
+      width: 210mm; height: 297mm;
+      overflow: hidden;
+      color: #fff;
+      display: grid; place-items: center;
+      text-align: center;
+    }
+    .backcover-bg { position: absolute; inset: 0; z-index: 0; }
+    .backcover-bg-color { position: absolute; inset: 0; z-index: 0; background: {{ bg_color }}; }
+    .backcover-bg-img {
+      position: absolute; inset: 0; z-index: 0;
+      width: 100%; height: 100%; object-fit: cover; display: block;
+    }
+
+    .backcover-inner {
+      position: relative; z-index: 2;
+      max-width: 180mm; padding: 22mm 16mm;
+      display: grid; gap: {{ gap_mm }}mm;
+      align-items: center;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .backcover-text {
+      font-size: {{ text_size_pt }}pt; line-height: 1.45; text-align: center;
+      margin: 0 auto; max-width: 150mm;
+    }
+
+    .company {
+      display: grid; gap: 1.6mm; margin-top: 2mm;
+      font-size: {{ text_size_pt }}pt; line-height: 1.35;
+    }
+    .company-name { font-weight: 700; letter-spacing: .2px; }
+    .company-site a { color: #fff; text-decoration: underline; }
+  </style>
+
+  <div class="backcover">
+    <div class="backcover-bg">
+      {% if bg_img and bg_img_exists %}
+        <img class="backcover-bg-img" src="{{ bg_img }}" alt="">
+      {% elif bg_img %}
+        <div style="position:absolute; inset:0; display:grid; place-items:center; color:#fff;">
+          <div style="outline:0.4mm dashed rgba(255,255,255,.7); padding:3mm 4mm; border-radius:2mm;">
+            Фон не найден: {{ bg_img }}
+          </div>
+        </div>
+      {% else %}
+        <div class="backcover-bg-color"></div>
+      {% endif %}
+    </div>
+
+    <div class="backcover-inner">
+      {% if text %}
+        <div class="backcover-text">{{ text }}</div>
+      {% endif %}
+
+      <div class="cover-logo"><img src="{{ logo }}" alt="logo"></div>
+
+      <div class="company">
+        {% if company_name %}<div class="company-name">{{ company_name }}</div>{% endif %}
+        {% if company_address %}<div class="company-addr">{{ company_address }}</div>{% endif %}
+        {% if company_contacts %}<div class="company-contacts">{{ company_contacts }}</div>{% endif %}
+        {% if company_site %}<div class="company-site"><a href="{{ company_site }}">{{ company_site }}</a></div>{% endif %}
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <base href="{{ settings.get('assets_base','') }}">
+  <title>{{ settings.get('title') or 'Каталог' }}</title>
+
+  <style>
+    /* ===== Базовая пагинация A4 ===== */
+    @page {
+      size: A4;
+      margin: 14mm 14mm 16mm 14mm;
+      @bottom-center { content: none; }
+    }
+    @page:left  { @bottom-left  { content: counter(page); font-size: 9pt; color: var(--muted); } }
+    @page:right { @bottom-right { content: counter(page); font-size: 9pt; color: var(--muted); } }
+
+    /* Именованные страницы */
+    @page cover {
+      size: A4; margin: 0;
+      @bottom-left{content:none;} @bottom-right{content:none;} @bottom-center{content:none;}
+    }
+    @page toc {
+      size: A4;
+      margin: 14mm 14mm 16mm 14mm;
+    }
+    @page backcover {
+      size: A4; margin: 0;
+      @bottom-left{content:none;} @bottom-right{content:none;} @bottom-center{content:none;}
+    }
+
+    @media print { .pb { page-break-before: always; } }
+
+    /* ===== База ===== */
+    :root { --brand: {{ settings.get('theme_color','#E53935') }}; --muted:#666; }
+    html, body { margin:0; padding:0; font-family: system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif; color:#111; }
+    .wrap { margin: 0 auto; padding: 0; }
+    .section { break-inside: avoid; page-break-inside: avoid; }
+
+    @media print {
+      .wrap { max-width: none; }
+    }
+
+    /* ===== Видимость баннеров шапки по умолчанию (до Paged.js) ===== */
+    .section.section-heading .banner-left,
+    .section.section-heading .banner-right { display: none; }
+    body:not([data-pagedjs-rendered="true"]) .section.section-heading .banner-right { display: flex; }
+
+    /* ===== Шапки серий (без display, чтобы не перебить JS) ===== */
+    .section-heading { margin: 0; padding: 0; }
+    .section-heading .series-banner {
+      /* display не задаём */
+      align-items: center; justify-content: space-between;
+      gap: 8mm; padding: 3mm 0mm; border-bottom: .3mm solid #eee;
+    }
+    .section-heading .series-sub {
+      margin: 0; color: #9aa0a6; font-size: 10pt; line-height: 1.25;
+      letter-spacing: .3px; text-transform: uppercase;
+    }
+    .section-heading .series-ribbon {
+      background: var(--brand); color:#fff; padding: 3mm 6mm; border-radius: 0 2mm 2mm 0;
+      font-weight:700; font-size:11pt; letter-spacing:.3px; display:inline-flex; align-items:center; gap:3mm;
+    }
+    .section-heading .series-ribbon .code { font-weight: 800; letter-spacing: .4px;}
+    .section-heading .series-logo { height: 7mm; max-width: 45mm; display:block; object-fit: contain; }
+    /* ===== Полноэкранные cover ===== */
+    @page typecover {
+      size: A4;
+      margin: 0;
+      @bottom-left   { content: none; }
+      @bottom-right  { content: none; }
+      @bottom-center { content: none; }
+    }
+    .type-cover {
+      page: typecover;
+      break-before: page;
+      break-after: page;
+      break-inside: avoid-page;
+      display: block;
+      position: relative;
+      width: 210mm; height: 297mm;
+      overflow: hidden;
+      color: #fff;
+      background: #000;
+    }
+    .type-cover .bg-img { position: absolute; inset: 0; width:100%; height:100%; object-fit: cover; z-index: 0; display:block; }
+    .type-cover .overlay { position: absolute; inset: 0; z-index: 1; }
+    .type-cover .title-wrap {
+      position: absolute; max-width: 160mm; padding: 10mm 12mm; z-index: 2;
+      left: 0; bottom: 0; text-align: left; color: #fff;
+    }
+    .type-cover .title { margin: 0; font-size: 28pt; line-height: 1.1; font-weight: 800; letter-spacing: .2px; text-shadow: 0 2px 6px rgba(0,0,0,.5); }
+    .type-cover .subtitle { margin: 5mm 0 0; font-size: 11pt; line-height: 1.4; opacity: .95; text-shadow: 0 1px 3px rgba(0,0,0,.4); }
+    .type-cover .accent { position: absolute; left: 0; top: 0; width: 4mm; height: 100%; background: #E53935; opacity: .9; z-index: 2; }
+
+    /* ===== Анти-обвязка Paged.js ===== */
+    #pagedjs-pages, .pagedjs_pages, .pagedjs_page, .pagedjs_sheet { background: transparent !important; box-shadow: none !important; }
+    .pagedjs_area { background: transparent !important; }
+    .pagedjs_marks-crop, .pagedjs_marks-middle, .pagedjs_bleed { display: none !important; }
+
+    /* ===== TOC ===== */
+    .toc-page { page: toc !important; break-before: page; break-after: auto; }
+
+    @media print {
+      .break-before-page { break-before: page; page-break-before: always; }
+      .break-after-page  { break-after:  page; page-break-after:  always; }
+      .series-header { page-break-inside: avoid; break-inside: avoid; }
+    }
+  </style>
+
+  {% if settings.get('use_pagedjs','no') in ('yes','true','1') %}
+    <script src="https://unpkg.com/pagedjs/dist/paged.polyfill.js"></script>
+
+    <script>
+      (function () {
+        if (!window.Paged) return;
+
+        /* Жёстко выставляем нужный баннер в каждом клоне на странице */
+        class SectionHeadingFix extends Paged.Handler {
+          afterRendered() {
+            document.body.setAttribute('data-pagedjs-rendered', 'true');
+
+            document.querySelectorAll('.pagedjs_page').forEach(page => {
+              const rightPage = page.classList.contains('pagedjs_right_page'); // Paged: 1-я — правая
+
+              page.querySelectorAll('.section.section-heading').forEach(h => {
+                // Обновим классы-паритет
+                h.classList.toggle('is-right', rightPage);
+                h.classList.toggle('is-left', !rightPage);
+
+                const left  = h.querySelector('.banner-left');
+                const right = h.querySelector('.banner-right');
+
+                // Сначала всё спрячем (важно перебить любые правила polyfill)
+                [left, right].forEach(el => {
+                  if (!el) return;
+                  // Снимаем флаг скрытия от Paged.js
+                  el.removeAttribute('data-undisplayed');
+                  // Явно ставим display:none !important
+                  el.style.setProperty('display', 'none', 'important');
+                });
+
+                // Затем показываем нужный
+                const toShow = rightPage ? right : left;
+                if (toShow) {
+                  toShow.removeAttribute('data-undisplayed');
+                  toShow.style.setProperty('display', 'flex', 'important');
+                }
+              });
+            });
+          }
+        }
+
+        try { Paged.registerHandlers(SectionHeadingFix); }
+        catch (e) { console.warn('Paged.js SectionHeadingFix error:', e); }
+      })();
+    </script>
+
+    <!-- TOC номера страниц -->
+    <script>
+      (function () {
+        if (!window.Paged) return;
+
+        class TOCPageNumbers extends Paged.Handler {
+          pageForElement(el){
+            const p = this.pageMapper && this.pageMapper.pageForElement(el);
+            return p ? p.position : null;
+          }
+          afterRendered(){
+            const coverOffset = 1;
+            document.querySelectorAll('.toc-page-num[data-target]').forEach((span)=>{
+              const sel = span.getAttribute('data-target');
+              const el  = sel && document.querySelector(sel);
+              if (!el) return;
+              const p = this.pageMapper && this.pageMapper.pageForElement(el);
+              const n = p ? p.position : null;
+              if (n != null) span.textContent = Math.max(1, n - coverOffset);
+            });
+          }
+        }
+
+        try { Paged.registerHandlers(TOCPageNumbers); }
+        catch (e) { console.warn('Paged.js TOC handler error:', e); }
+      })();
+    </script>
+  {% endif %}
+</head>
+<body>
+  {% for frag in fragments %}
+    {{ frag | safe }}
+  {% endfor %}
+</body>
+</html>

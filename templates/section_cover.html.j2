@@ -1,0 +1,113 @@
+{# Полноэкранные «открывашки» для типов оборудования (L1): IMG + текст #}
+{% for c in covers %}
+<section class="section type-cover" id="{{ c.anchor }}-cover" style="page: typecover; break-before: page;">
+  <style>
+    @page typecover {
+      size: A4;
+      margin: 0;
+      @bottom-left   { content: none; }
+      @bottom-right  { content: none; }
+      @bottom-center { content: none; }
+    }
+    .type-cover {
+      position: relative;
+      width: 210mm; height: 297mm;
+      overflow: hidden;
+      color: {{ c.text_color }};
+      background: #000; /* на случай, если фон не загрузится */
+    }
+    /* Фон как IMG — стабильнее, чем background-image в CSS */
+    .type-cover .bg-img {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      z-index: 0;
+      display: block;
+    }
+    .type-cover .overlay {
+      position: absolute; inset: 0;
+      z-index: 1;
+      {% if c.use_gradient %}
+      background: linear-gradient(180deg, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0.25) 40%, rgba(0,0,0,0.55) 100%);
+      {% else %}
+      background: transparent;
+      {% endif %}
+    }
+    .type-cover .accent {
+      position: absolute;
+      left: 0; top: 0;
+      width: 4mm; height: 100%;
+      background: {{ c.brand }};
+      opacity: .9;
+      z-index: 2;
+    }
+
+    /* Заголовочный блок: без горизонтального паддинга, чтобы край совпал с @page margin */
+    .type-cover .title-wrap {
+      position: absolute;
+      max-width: 160mm;
+      padding: 10mm 0;      /* ⬅ только вертикальный «воздух» */
+      z-index: 3;           /* ⬅ гарантированно поверх overlay/accent */
+      color: {{ c.text_color }};
+    }
+
+    .type-cover .title {
+      margin: 0;
+      font-size: 28pt;
+      line-height: 1.1;
+      font-weight: 800;
+      letter-spacing: .2px;
+      {% if c.use_shadow %} text-shadow: 0 2px 6px rgba(0,0,0,.5); {% endif %}
+    }
+    .type-cover .subtitle {
+      margin: 5mm 0 0;
+      font-size: 11pt;
+      line-height: 1.4;
+      opacity: .95;
+      {% if c.use_shadow %} text-shadow: 0 1px 3px rgba(0,0,0,.4); {% endif %}
+    }
+
+    /* Привязка к сторонам: используем те же поля, что и на обычных страницах
+       (если var(--page-ml/mr) не определены, fallback 14mm) */
+    {% set tx_align = c.align if c.align is defined else 'left' %}
+
+    .type-cover .title-wrap.pos-bottom-left  { left:  var(--page-ml, 14mm); bottom: 0; text-align: {{ tx_align }}; }
+    .type-cover .title-wrap.pos-bottom-right { right: var(--page-mr, 14mm); bottom: 0; text-align: {{ tx_align }}; }
+    .type-cover .title-wrap.pos-top-left     { left:  var(--page-ml, 14mm); top:    0; text-align: {{ tx_align }}; }
+    .type-cover .title-wrap.pos-top-right    { right: var(--page-mr, 14mm); top:    0; text-align: {{ tx_align }}; }
+    .type-cover .title-wrap.pos-center       { left: 50%; top: 50%; transform: translate(-50%, -50%); text-align: {{ tx_align }}; }
+
+    /* Диагностика (если фон не найден) */
+    .type-cover .ph {
+      position: absolute; inset: 0;
+      z-index: 0;
+      display: grid; place-items: center;
+      outline: 0.5mm dashed rgba(255,255,255,.7);
+      color: #fff; background: rgba(0,0,0,.35);
+      padding: 3mm; border-radius: 2mm; font-size: 10pt;
+      text-align: center;
+    }
+  </style>
+
+  {% if c.image and c.image_exists %}
+    <img class="bg-img" src="{{ c.image }}" alt="">
+  {% elif c.image %}
+    <div class="ph">Фон не найден:
+{{ c.image }}
+<small>{{ c.image_abs }}</small></div>
+  {% endif %}
+
+  <div class="overlay"></div>
+  <div class="accent"></div>
+
+  <div class="title-wrap
+    {% if c.pos == 'bottom-left' %}pos-bottom-left{% elif c.pos == 'bottom-right' %}pos-bottom-right
+    {% elif c.pos == 'top-left' %}pos-top-left{% elif c.pos == 'top-right' %}pos-top-right
+    {% elif c.pos == 'center' %}pos-center{% else %}pos-bottom-left{% endif %}">
+    <h1 class="title">{{ c.title }}</h1>
+    {% if c.subtitle %}
+      <div class="subtitle">{{ c.subtitle }}</div>
+    {% endif %}
+  </div>
+</section>
+{% endfor %}

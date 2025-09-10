@@ -1,0 +1,160 @@
+{# Серии и их таблицы/медиа #}
+{% set items = series_groups if series_groups is defined else groups %}
+
+{% for g in items %}
+<section class="section section-products" id="{{ g.anchor }}" style="page: products;">
+  {% if g.page_break_before %}<div class="pb"></div>{% endif %}
+
+  {# ---------- Шапка серии (баннер с кодом/логотипом, лев/прав) ---------- #}
+  {% set _b = {
+    "block_id": g.anchor ~ "-heading",
+    "title": (g.title if g.title is defined and g.title else g.name),
+    "subtitle": (g.subtitle if g.subtitle is defined and g.subtitle else (g.title if g.title is defined and g.title else g.name)),
+    "series_code": (g.code if g.code is defined else ""),
+    "logo": (settings.get('cover_logo','') if settings is defined else '')
+  } %}
+  {% set b = _b %}
+  {% include "section_heading.html.j2" %}
+  {% set b = none %}
+
+  {# ---------- Верхняя полоса: фото + расшифровка ---------- #}
+  {% if g.hero or g.naming %}
+  <div class="series-top grid" style="display:grid; grid-template-columns: 1fr 1fr; gap: 8mm; align-items:start; margin: 6mm 0 8mm;">
+    <div class="series-photo" style="border: .3mm solid #eee; border-radius: 2mm; padding: 4mm; background:#fff;">
+      {% if g.hero and g.hero.photo %}
+        <img src="{{ g.hero.photo }}" alt="{{ g.code or '' }}" style="width:100%; height:auto; display:block; object-fit:contain;">
+      {% else %}
+        <div style="height:45mm; display:flex; align-items:center; justify-content:center; color:#aaa; font-size:11pt;">Нет изображения</div>
+      {% endif %}
+      {% if g.hero and g.hero.banner_md %}
+        <div style="margin-top:3mm; font-size:10pt; color:#555; line-height:1.35;">{{ g.hero.banner_md }}</div>
+      {% endif %}
+    </div>
+
+    <div class="series-decoding" style="border: .3mm solid #eee; border-radius: 2mm; padding: 5mm 6mm; background:#fff;">
+      <div style="font-weight:800; font-size:12pt; letter-spacing:.2px; color:#444; margin-bottom:3mm;">
+        Расшифровка обозначения
+      </div>
+
+      {% if g.naming and g.naming.code %}
+        <div style="display:flex; gap:4mm; align-items:center; margin-bottom:4mm; flex-wrap:wrap;">
+          <div style="background:var(--brand); color:#fff; font-weight:800; padding:2mm 4mm; border-radius:1.5mm; letter-spacing:.3px;">
+            {{ g.naming.code }}
+          </div>
+          {% if g.naming.pattern %}
+            <div style="color:#666; font-size:10pt;">{{ g.naming.pattern }}</div>
+          {% endif %}
+        </div>
+      {% endif %}
+
+      {% if g.naming and g.naming.legend %}
+        <ul style="margin:0; padding-left:5mm; color:#444; font-size:10pt; line-height:1.45;">
+          {% for line in g.naming.legend %}
+            {% if line is mapping %}
+              <li style="margin:1.2mm 0;">
+                {% if line.token %}<strong>{{ line.token }}</strong>{% endif %}
+                {% if line.text %}{% if line.token %} — {% endif %}{{ line.text }}{% endif %}
+              </li>
+            {% else %}
+              <li style="margin:1.2mm 0;">{{ line }}</li>
+            {% endif %}
+          {% endfor %}
+        </ul>
+      {% endif %}
+
+      {% if g.summary_md %}
+        <div style="margin-top:4mm; color:#666; font-size:10pt; line-height:1.45;">
+          {{ g.summary_md }}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  {# ---------- Таблицы серии ---------- #}
+  <div class="wrap">
+    {% for t in g.tables %}
+      <article style="break-inside: avoid; page-break-inside: avoid; margin: 5mm 0 7mm;">
+        {% if t.title %}
+          <header style="
+            background: var(--brand);
+            color: #fff;
+            font-weight: 700;
+            font-size: 11pt;
+            padding: 2.8mm 3.5mm;
+            letter-spacing: .1px;
+          ">
+            {{ t.title }}
+          </header>
+        {% endif %}
+
+        <table style="
+          width: 100%;
+          border-collapse: collapse;
+          border: .3mm solid #ddd;
+          {% if t.title %}border-top: none;{% endif %}
+          background: #fff;
+        ">
+          <thead>
+            <tr>
+              {# универсально: поддержка t.headers[] ИЛИ t.columns[{key,title}] #}
+              {% if t.headers %}
+                {% for h in t.headers %}
+                  <th style="text-align:left; padding:2.5mm 3mm; background:#fafafa; border-bottom:.3mm solid #e6e6e6; font-weight:600; font-size:8pt;">{{ h }}</th>
+                {% endfor %}
+              {% elif t.columns %}
+                {% for col in t.columns %}
+                  <th style="text-align:left; padding:2.5mm 3mm; background:#fafafa; border-bottom:.3mm solid #e6e6e6; font-weight:600; font-size:8pt;">{{ col.title }}</th>
+                {% endfor %}
+              {% endif %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in t.rows %}
+              <tr>
+                {% if t.headers %}
+                  {# старый формат: row — это список ячеек #}
+                  {% for cell in row %}
+                    <td style="padding:2.5mm 3mm; border-bottom:.3mm solid #eee; font-size:8pt; vertical-align:top;">{{ cell }}</td>
+                  {% endfor %}
+                {% elif t.columns %}
+                  {# новый формат: row — dict по ключам columns[*].key #}
+                  {% for col in t.columns %}
+                    <td style="padding:2.5mm 3mm; border-bottom:.3mm solid #eee; font-size:8pt; vertical-align:top;">
+                      {{ row.get(col.key, '') }}
+                    </td>
+                  {% endfor %}
+                {% endif %}
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        {% if t.notes_md %}
+          <div style="font-size: 8pt; color: var(--muted); margin-top: 2.5mm; line-height: 1.35;">
+            {{ t.notes_md }}
+          </div>
+        {% endif %}
+      </article>
+    {% endfor %}
+  </div>
+
+  {# ---------- Чертежи / графики / фото с микро-заголовком ---------- #}
+  {% if g.media and g.media|length > 0 %}
+    <div class="series-media-grid" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:6mm; margin: 6mm 0 0;">
+      {% for m in g.media %}
+        <figure style="break-inside: avoid; page-break-inside: avoid; margin:0;">
+          <div style="border:.3mm solid #eee; border-radius:2mm; background:#fff; padding:4mm;">
+            <img src="{{ m.file }}" alt="{{ m.caption or m.type }}" style="width:100%; height:auto; object-fit:contain; display:block;">
+          </div>
+          {% if m.caption %}
+            <figcaption style="margin-top:2mm; font-size:9.5pt; color:#555; line-height:1.35;">
+              {{ m.caption }}
+            </figcaption>
+          {% endif %}
+        </figure>
+      {% endfor %}
+    </div>
+  {% endif %}
+</section>
+{% endfor %}

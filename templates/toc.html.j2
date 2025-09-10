@@ -1,0 +1,122 @@
+{# templates/toc.html.j2 — СОДЕРЖАНИЕ #}
+<section class="toc-page">
+  <style>
+    .toc-page {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      row-gap: 8mm; /* поля берутся из @page toc */
+    }
+
+    .toc-title {
+      color: var(--brand);
+      margin: 0;
+      font-size: 22pt;
+      line-height: 1.2;
+    }
+
+    .toc-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 4mm;
+    }
+
+    .toc-item { break-inside: avoid; page-break-inside: avoid; }
+
+    /* Вариант A: leaders + target-counter */
+    .toc-link {
+      color: inherit;
+      text-decoration: none;
+      display: block;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+    .toc-link::after {
+      content: leader(dotted) " " target-counter(attr(href), page);
+      color: var(--muted);
+    }
+
+    /* Подпункты (серии, L2) */
+    .toc-children {
+      list-style: none;
+      margin: 2mm 0 0 8mm;
+      padding: 0;
+      display: grid;
+      gap: 2.5mm;
+    }
+    .toc-children .toc-link { font-size: 11pt; }
+
+    .toc-note {
+      color: var(--muted);
+      font-size: 10pt;
+      margin: 0;
+      line-height: 1.4;
+    }
+
+    /* Вариант B (fallback) */
+    .toc-row { display: none; }
+
+    .toc-page.no-leader .toc-link { display: none; }
+    .toc-page.no-leader .toc-row  {
+      display: flex;
+      align-items: baseline;
+      gap: .5em;
+    }
+    .toc-page.no-leader .toc-text { min-width: 0; }
+    .toc-page.no-leader .toc-dots {
+      flex: 1 1 auto;
+      border-bottom: 1px dotted currentColor;
+      transform: translateY(-.15em);
+      opacity: .7;
+    }
+    .toc-page.no-leader .toc-page-num {
+      color: var(--muted);
+      min-width: 2ch;
+      text-align: right;
+    }
+  </style>
+
+  <h2 class="toc-title" id="toc-title">Содержание</h2>
+
+  <ol class="toc-list">
+    {% for e in entries %}
+      {% if e.level == 1 %}
+        <li class="toc-item">
+          <a class="toc-link" href="#{{ e.anchor }}">{{ e.title }}</a>
+          <div class="toc-row" aria-hidden="true">
+            <span class="toc-text">{{ e.title }}</span>
+            <span class="toc-dots"></span>
+            <span class="toc-page-num" data-target="#{{ e.anchor }}"></span>
+          </div>
+
+          {% if e.children and e.children|length %}
+            <ol class="toc-children">
+              {% for ch in e.children %}
+                <li class="toc-item">
+                  <a class="toc-link" href="#{{ ch.anchor }}">{{ ch.title }}</a>
+                  <div class="toc-row" aria-hidden="true">
+                    <span class="toc-text">{{ ch.title }}</span>
+                    <span class="toc-dots"></span>
+                    <span class="toc-page-num" data-target="#{{ ch.anchor }}"></span>
+                  </div>
+                </li>
+              {% endfor %}
+            </ol>
+          {% endif %}
+        </li>
+      {% else %}
+        <li class="toc-item">
+          <a class="toc-link" href="#{{ e.anchor }}">{{ e.title }}</a>
+          <div class="toc-row" aria-hidden="true">
+            <span class="toc-text">{{ e.title }}</span>
+            <span class="toc-dots"></span>
+            <span class="toc-page-num" data-target="#{{ e.anchor }}"></span>
+          </div>
+        </li>
+      {% endif %}
+    {% else %}
+      <li class="toc-item" style="opacity:.6;">Нет разделов для содержания</li>
+    {% endfor %}
+  </ol>
+</section>

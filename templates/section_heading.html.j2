@@ -1,0 +1,21 @@
+{# Шапка серии; показываем левый или правый баннер по классам is-left / is-right на родителе #}
+<section class="section section-heading" id="sec-{{ b.block_id }}">
+  <!-- Левая страница: слева плашка СЕРИЯ -->
+  <div class="series-banner banner-left" aria-hidden="true">
+    <div class="series-ribbon">
+      <span class="label">СЕРИЯ</span>
+      <span class="code">{{ (b.series_code or '') | upper }}</span>
+    </div>
+    <p class="series-sub">{{ b.subtitle or b.title }}</p>
+  </div>
+
+  <!-- Правая страница: подпись + логотип справа -->
+  <div class="series-banner banner-right" aria-hidden="true">
+    <p class="series-sub">{{ b.subtitle or b.title }}</p>
+    {% if b.logo %}
+      <img class="series-logo" src="{{ b.logo }}" alt="logo">
+    {% else %}
+      <span style="width:45mm; height:7mm; display:block;"></span>
+    {% endif %}
+  </div>
+</section>

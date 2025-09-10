@@ -1,0 +1,116 @@
+{# templates/series_detail.html.j2 — одна страница на серию:
+   Заголовок → ОПИСАНИЕ → Изображение → КОНСТРУКЦИЯ → ПРЕИМУЩЕСТВА (всё вертикально) #}
+{% for it in items %}
+<section class="section series-page break-before-page" id="{{ it.anchor_p1 }}" style="break-before: page;">
+  <style>
+    .series-page { break-inside: avoid; page-break-inside: avoid; }
+    .series-wrap {
+      max-width: 210mm;
+      margin: 0 auto;
+      padding: 0 6px;
+      display: flex;
+      flex-direction: column;   /* вертикальный порядок блоков */
+      gap: 8mm;
+    }
+
+    .block { break-inside: avoid; page-break-inside: avoid; display: flex; flex-direction: column; gap: 3mm; }
+
+    .h-title {
+      margin: 0;
+      font-size: 18pt;
+      color: var(--brand, {{ it.brand }});
+      line-height: 1.15;
+    }
+    .h-cap {
+      margin: 0;
+      font-size: 11pt;
+      font-weight: 700;
+      color: #111;
+      letter-spacing: .1px;
+    }
+    .para {
+      margin: 0;
+      font-size: 10.5pt;
+      line-height: 1.5;
+      color:#222;
+      text-align: justify;
+      hyphens: auto;
+    }
+
+    /* Изображение — полноразмерное (можно ограничить высоту при необходимости) */
+    .hero {
+      display: block;
+      height: 60mm;
+      border-radius: 3mm;
+      object-fit: contain;
+      /* при необходимости: max-height: 120mm; */
+    }
+    .ph {
+      width: 100%;
+      display: grid;
+      place-items: center;
+      font-size: 10pt;
+      color: #888;
+      background: #f5f5f5;
+      border-radius: 3mm;
+      border: 0.3mm dashed #ddd;
+      min-height: 45mm;
+    }
+
+    .ul {
+      margin: 0;
+      padding-left: 4.5mm;
+      display: grid;
+      row-gap: 2mm;
+      list-style: '—  ';
+    }
+    .ul li { font-size: 10.5pt; line-height: 1.45; }
+  </style>
+
+  <div class="series-wrap">
+
+    <!-- Заголовок серии -->
+    <div class="block">
+      <h3 class="h-title">{{ it.title }}</h3>
+    </div>
+
+    <!-- ОПИСАНИЕ -->
+    <div class="block">
+      <div class="h-cap">ОПИСАНИЕ</div>
+      {% if it.description %}
+        <div class="para">{{ it.description }}</div>
+      {% else %}
+        <div class="para" style="opacity:.7;">Нет описания.</div>
+      {% endif %}
+    </div>
+
+    <!-- Изображение (между Описанием и Конструкцией) -->
+    <div class="block">
+      {% if it.hero %}
+        <img class="hero" src="{{ it.hero }}" alt="">
+      {% else %}
+        <div class="ph">нет изображения серии</div>
+      {% endif %}
+    </div>
+
+    <!-- КОНСТРУКЦИЯ (вертикально) -->
+    <div class="block">
+      <div class="h-cap">КОНСТРУКЦИЯ</div>
+      {% if it.construction %}
+        <div class="para">{{ it.construction }}</div>
+      {% else %}
+        <div class="para" style="opacity:.7;">Нет данных.</div>
+      {% endif %}
+    </div>
+
+    <!-- ПРЕИМУЩЕСТВА (вертикально) -->
+    <div class="block">
+      <div class="h-cap">ПРЕИМУЩЕСТВА</div>
+      {% if it.features %}
+        <div class="para">{{ it.features }}</div>
+      {% endif %}
+    </div>
+
+  </div>
+</section>
+{% endfor %}
