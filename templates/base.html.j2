@@ -106,6 +106,25 @@
       .break-after-page  { break-after:  page; page-break-after:  always; }
       .series-header { page-break-inside: avoid; break-inside: avoid; }
     }
+
+    :root { --page-margin-h: 14mm; }
+
+    /* Вынести шапку на полную ширину листа (full bleed) */
+    .section.section-heading.full-bleed {
+      position: relative;
+      margin-left: calc(-1 * var(--page-margin-h));
+      margin-right: calc(-1 * var(--page-margin-h));
+      width: calc(100% + (2 * var(--page-margin-h)));
+    }
+
+    /* Чтобы контент внутри не «прилипал» к краям листа, вернём внутренние отступы */
+    .section.section-heading.full-bleed .series-banner {
+      padding-left: var(--page-margin-h);
+      padding-right: var(--page-margin-h);
+    }
+
+    /* На всякий случай — в paged.js-клонах разрешим выход за область */
+    .pagedjs_page .pagedjs_area { overflow: visible; }
   </style>
 
   {% if settings.get('use_pagedjs','no') in ('yes','true','1') %}

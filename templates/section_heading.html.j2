@@ -1,5 +1,38 @@
+<style>
+  .section.section-heading.full-bleed .series-banner { position: relative; z-index: 0; }
+  .section.section-heading.full-bleed .series-ribbon  { position: relative; z-index: 1; }
+
+  /* На левой странице: тянем фон ленты влево до края листа */
+  .section.section-heading.full-bleed.is-left  .banner-left  .series-ribbon::before,
+  .section.section-heading.full-bleed:not(.is-right) .banner-left  .series-ribbon::before {
+    content: "";
+    position: absolute;
+    top: 0; bottom: 0;
+    right: 100%;                                    /* от левого края ленты влево */
+    left: calc(-1 * var(--page-margin-h, 14mm));     /* до самого края листа */
+    background: var(--brand);
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  /* На правой странице: тянем фон ленты вправо до края листа */
+  .section.section-heading.full-bleed.is-right .banner-right .series-ribbon::after {
+    content: "";
+    position: absolute;
+    top: 0; bottom: 0;
+    left: 100%;                                     /* от правого края ленты вправо */
+    right: calc(-1 * var(--page-margin-h, 14mm));    /* до самого края листа */
+    background: var(--brand);
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  /* Чуть скруглим только внутренние углы самой ленты — края-до-листа остаются ровными */
+  .section-heading .series-ribbon { border-radius: 0 2mm 2mm 0; }
+  .section.section-heading.is-right .series-ribbon { border-radius: 2mm 0 0 2mm; }
+</style>
 {# Шапка серии; показываем левый или правый баннер по классам is-left / is-right на родителе #}
-<section class="section section-heading" id="sec-{{ b.block_id }}">
+<section class="section section-heading full-bleed" id="sec-{{ b.block_id }}">
   <!-- Левая страница: слева плашка СЕРИЯ -->
   <div class="series-banner banner-left" aria-hidden="true">
     <div class="series-ribbon">
@@ -10,7 +43,7 @@
   </div>
 
   <!-- Правая страница: подпись + логотип справа -->
-  <div class="series-banner banner-right" aria-hidden="true">
+  <div class="series-banner banner-right full-bleed" aria-hidden="true">
     <p class="series-sub">{{ b.subtitle or b.title }}</p>
     {% if b.logo %}
       <img class="series-logo" src="{{ b.logo }}" alt="logo">

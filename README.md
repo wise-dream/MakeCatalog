@@ -70,7 +70,7 @@ MakeCatalog/
 ### Базовое использование
 
 ```bash
-python cli.py catalog.json
+python cli.py catalog.json --no-cover
 ```
 
 Эта команда создаст:
